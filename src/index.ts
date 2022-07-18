@@ -9,6 +9,7 @@ const app = express();
 app.use(express.json());
 
 app.use("/user", userRouter);
+app.use("/show", userRouter)
 
 const server = app.listen(3003, () => {
     if (server) {

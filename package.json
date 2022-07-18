@@ -35,5 +35,8 @@
     "ts-node-dev": "^2.0.0",
     "typescript": "^3.9.10",
     "uuid": "^8.3.2"
+  },
+  "devDependencies": {
+    "@types/dotenv": "^8.2.0"
   }
 }
