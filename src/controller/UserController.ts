@@ -4,7 +4,12 @@ import { UserBusiness } from "../business/UserBusiness";
 import { BaseDatabase } from "../data/BaseDatabase";
 
 export class UserController {
-    async signup(req: Request, res: Response) {
+
+    constructor(
+        private userBusiness: UserBusiness
+    ){}
+
+    signup = async(req: Request, res: Response) => {
         try {
 
             const input: UserInputDTO = {
@@ -14,37 +19,40 @@ export class UserController {
                 role: req.body.role
             }
 
-            const userBusiness = new UserBusiness();
-            const token = await userBusiness.createUser(input);
+            const token = await this.userBusiness.createUser(input);
 
             res.status(200).send({ token });
 
         } catch (error) {
-            res.status(400).send({ error: error.message });
+            if (error instanceof Error) {
+                return res.status(400).send(error.message)
+            }
+            res.status(500).send("Erro ao Criar Usuário")
         }
 
         await BaseDatabase.destroyConnection();
     }
 
-    async login(req: Request, res: Response) {
+    login = async(req: Request, res: Response) =>  {
+
+        const { email, password } = req.body
+
+            const loginDTO: LoginInputDTO = {
+                email,
+                password
+            }
 
         try {
+            const token = await this.userBusiness.login(loginDTO);
 
-            const loginData: LoginInputDTO = {
-                email: req.body.email,
-                password: req.body.password
-            };
+            res.status(200).send({message: "Logado uhuul!", token});
 
-            const userBusiness = new UserBusiness();
-            const token = await userBusiness.getUserByEmail(loginData);
-
-            res.status(200).send({ token });
-
-        } catch (error:any) {
-            res.status(400).send({ error: error.message });
+        } catch (error) {
+            if (error instanceof Error) {
+                return res.status(400).send(error.message)
+            }
+            res.status(500).send("Erro ao Logar")
         }
-
-        await BaseDatabase.destroyConnection();
     }
 
 }

@@ -1,6 +1,7 @@
 import express from "express";
 import { ShowBusiness } from "../business/ShowBusiness";
 import ShowController from "../controller/ShowController";
+import BandDatabase from "../data/BandDatabase";
 import ShowDatabase from "../data/ShowDatabase";
 import { Authenticator } from "../services/Authenticator";
 import { HashManager } from "../services/HashManager";
@@ -13,7 +14,8 @@ const showBusiness = new ShowBusiness(
     new ShowDatabase(),
     new IdGenerator(),
     new HashManager(),
-    new Authenticator()
+    new Authenticator(),
+    new BandDatabase()
 )
 
 

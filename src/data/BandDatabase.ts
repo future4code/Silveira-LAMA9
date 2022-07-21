@@ -1,14 +1,14 @@
-import Show from "../model/Show";
+import Band from "../model/Band";
 import { BaseDatabase } from "./BaseDatabase";
 
-export default class ShowDatabase extends BaseDatabase{
-    protected TABLE_NAME = "SHOWS"
+export default class BandDatabase extends BaseDatabase {
+    protected TABLE_NAME = "BANDAS"
 
-    insert = async(show:Show) => {
+    register = async(band:Band) => {
         try {
             await this
             .getConnection()
-            .insert(show)
+            .insert(band)
             .into(this.TABLE_NAME)
         } catch (error) {
             if (error instanceof Error) {
@@ -19,13 +19,14 @@ export default class ShowDatabase extends BaseDatabase{
         }
     }
 
-    get = async() => {
+    getByname = async(name:string) => {
         try {
             const queryResult = await this
             .getConnection()
             .select()
-            .from(this.TABLE_NAME)
-            return queryResult
+            .where({name})
+            .into(this.TABLE_NAME)
+            return queryResult[0]
         } catch (error) {
             if (error instanceof Error) {
                 throw new Error(error.message)
@@ -35,16 +36,15 @@ export default class ShowDatabase extends BaseDatabase{
         }
     }
 
-    findByDay = async(day:string) => {
+    getById = async(id:string) => {
         try {
             const queryResult = await this
             .getConnection()
-            .select('band_id')
+            .select('name', 'music_genre')
             .from(this.TABLE_NAME)
-            .where({week_day:day})
-            .orderBy('start_time', 'desc')
+            .where({id})
 
-            return queryResult
+            return queryResult[0]
         } catch (error) {
             if (error instanceof Error) {
                 throw new Error(error.message)

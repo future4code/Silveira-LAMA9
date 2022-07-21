@@ -1,3 +1,4 @@
+import BandDatabase from "../data/BandDatabase";
 import ShowDatabase from "../data/ShowDatabase";
 import Show from "../model/Show";
 import { Authenticator } from "../services/Authenticator";
@@ -12,14 +13,15 @@ export class ShowBusiness {
         private showData: ShowDatabase,
         private idGenerator: IdGenerator,
         private hashManager: HashManager,
-        private authenticator:Authenticator
+        private authenticator:Authenticator,
+        private bandData: BandDatabase
     ){}
 
     add = async(input:addShowInputDTO, token:string) => {
         
-        const {day, start, end} = input
+        const {week_day, start, end, band_id} = input
 
-        if(!day || !start || !end) {
+        if(!week_day || !start || !end || !band_id) {
             throw new Error("Campos inválidos")
         }
 
@@ -27,21 +29,41 @@ export class ShowBusiness {
             throw new Error("Os Horários dos Shows são permitidos apenas entre 8h até 23h")
         }
 
-        const unavailableDate = await this.showData.unavailable(day, start)
+        if(week_day !== 'sexta' && week_day !== 'sabado' && week_day !== 'domingo'){
+            throw new Error("Ocorrerão shows apenas na sexta, no sabado e no domingo");
+        }
 
-        if(unavailableDate){
-            throw new Error("Este horário já está ocupado");
-            
+
+        const shows = await this.showData.get()
+
+        for (let show of shows) {
+            if(show.week_day === week_day && show.start_time < start && show.end_time > start) {
+                throw new Error("Horário indisponível");
+            } else if(show.week_day === week_day && show.start_time === start){
+                throw new Error("Horário indisponível");
+            } else if (show.week_day === week_day && show.end_time === start){
+                throw new Error("Horário indisponível");
+            }else if(show.week_day === week_day && show.start_time < end && show.end_time > end) {
+                throw new Error("Horário indisponível");
+            }else if(show.week_day === week_day && show.start_time === end){
+                throw new Error("Horário indisponível");
+            } else if (show.week_day === week_day && show.end_time === end){
+                throw new Error("Horário indisponível");
+            }
         }
 
         const tokenData: authenticationData = this.authenticator.getData(token)
-        const band_id = tokenData.id
+
+        if(!tokenData){
+            throw new Error("Token inválido ou inexistente");
+            
+        }
 
         const id:string = this.idGenerator.generate()
 
         const show = new Show(
             id, 
-            day,
+            week_day,
             start,
             end,
             band_id
@@ -54,17 +76,25 @@ export class ShowBusiness {
     }
 
     get = async(day:string) => {
-        const shows = await this.showData.findByDay(day)
+        const band_ids = await this.showData.findByDay(day)
 
-        if(!shows) {
+        let shows:string[] = []
+
+        if(!band_ids) {
             throw new Error("Nenhum show marcado para esse dia");
+        }
+
+        for (let band_id of band_ids) {
+            const band = await this.bandData.getById(band_id.band_id) 
+            shows.push(band)
+        }
+
+        if(day !== 'sexta' && day !== 'sabado' && day !== 'domingo'){
+            throw new Error("Só ocorrerão shows na sexta, no sabado e no domingo");
             
         }
 
         return shows
 
     }
-
-
-
 }
